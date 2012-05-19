@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Superest.js by ezmilhouse</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Superest.js</h1>
+        <p>a convenient wrapper for TJ's express-resource module</p>
+        <p class="view"><a href="https://github.com/ezmilhouse/supeREST.js">View the Project on GitHub <small>ezmilhouse/supeREST.js</small></a></p>
+        <ul>
+          <li><a href="https://github.com/ezmilhouse/supeREST.js/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/ezmilhouse/supeREST.js/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/ezmilhouse/supeREST.js">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>Superest.js</h1>
+
+<p>a convenient wrapper for <a href="https://github.com/visionmedia/express-resource">TJ's express-resource for Node.js</a></p>
+
+<h2>Motivation</h2>
+
+<p>I wanted to have an easier way kickstart with mongoDB connected to express-resources. So now it works with <a href="http://mongoosejs.com/">mongoose for Node.js</a>.
+It also supports auto-loading and nested resources.</p>
+
+<h2>Quickstart</h2>
+
+<p>Keep in mind that express-resources routes REST like this:</p>
+
+<div class="highlight">
+<pre>
+    <span class="cm">/**</span>
+<span class="cm">     *</span>
+<span class="cm">     * GET     /resource           -&gt;  index</span>
+<span class="cm">     * POST    /resource           -&gt;  create</span>
+<span class="cm">     * GET     /resource/:id       -&gt;  show</span>
+<span class="cm">     * PUT     /resource/:id       -&gt;  update</span>
+<span class="cm">     * DELETE  /resource/:id       -&gt;  destroy</span>
+<span class="cm">     *</span>
+<span class="cm">     **/</span>
+
+</pre>
+</div>
+
+
+<div class="highlight">
+<pre>
+
+    <span class="c1">// simple</span>
+
+    <span class="cm">/**</span>
+<span class="cm">     *</span>
+<span class="cm">     * GET     /api/users           -&gt;  index</span>
+<span class="cm">     * POST    /api/users           -&gt;  create</span>
+<span class="cm">     * GET     /api/users/1234      -&gt;  show</span>
+<span class="cm">     * PUT     /api/users/1234      -&gt;  update</span>
+<span class="cm">     * DELETE  /api/users/1234      -&gt;  destroy</span>
+<span class="cm">     *</span>
+<span class="cm">     **/</span>
+
+    <span class="nx">superest</span><span class="p">.</span><span class="nx">Resource</span>
+        <span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">db</span><span class="p">({</span>
+            <span class="nx">name</span>   <span class="o">:</span> <span class="s1">'myDB'</span><span class="p">,</span>
+            <span class="nx">path</span>   <span class="o">:</span> <span class="s1">'mongodb://localhost'</span><span class="p">,</span>
+            <span class="nx">schema</span> <span class="o">:</span> <span class="s1">'user'</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="nx">at</span><span class="p">({</span>
+            <span class="nx">base</span> <span class="o">:</span> <span class="s1">'api'</span><span class="p">,</span>
+            <span class="nx">path</span> <span class="o">:</span> <span class="s1">'/users'</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+
+</pre>
+</div>
+
+
+<div class="highlight">
+<pre>
+
+    <span class="c1">// nested</span>
+
+    <span class="cm">/**</span>
+<span class="cm">     *</span>
+<span class="cm">     * GET     /api/users/1234/friends           -&gt;  index</span>
+<span class="cm">     * POST    /api/users/1234/friends           -&gt;  create</span>
+<span class="cm">     * GET     /api/users/1234/friends/5678      -&gt;  show</span>
+<span class="cm">     * PUT     /api/users/1234/friends/5678      -&gt;  update</span>
+<span class="cm">     * DELETE  /api/users/1234/friends/5678      -&gt;  destroy</span>
+<span class="cm">     *</span>
+<span class="cm">     **/</span>
+
+    <span class="c1">// resource: users</span>
+    <span class="nx">superest</span><span class="p">.</span><span class="nx">Resource</span>
+        <span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">'users'</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">db</span><span class="p">({</span>
+            <span class="nx">name</span>   <span class="o">:</span> <span class="s1">'myDB'</span><span class="p">,</span>
+            <span class="nx">path</span>   <span class="o">:</span> <span class="s1">'mongodb://localhost'</span><span class="p">,</span>
+            <span class="nx">schema</span> <span class="o">:</span> <span class="s1">'user'</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="nx">at</span><span class="p">({</span>
+            <span class="nx">base</span> <span class="o">:</span> <span class="s1">'api'</span><span class="p">,</span>
+            <span class="nx">path</span> <span class="o">:</span> <span class="s1">'/users'</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+
+
+    <span class="c1">// resource: friends</span>
+    <span class="nx">superest</span><span class="p">.</span><span class="nx">Resource</span>
+        <span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">'friends'</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">db</span><span class="p">({</span>
+            <span class="nx">name</span>   <span class="o">:</span> <span class="s1">'myDB'</span><span class="p">,</span>
+            <span class="nx">path</span>   <span class="o">:</span> <span class="s1">'mongodb://localhost'</span><span class="p">,</span>
+            <span class="nx">schema</span> <span class="o">:</span> <span class="s1">'friend'</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="s1">'path'</span><span class="p">,</span> <span class="s1">'friends'</span><span class="p">)</span>
+        <span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">'user'</span><span class="p">)</span> <span class="c1">// to be nested in user schema</span>
+        <span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+
+
+    <span class="c1">// create connection</span>
+    <span class="nx">superest</span><span class="p">.</span><span class="nx">Connection</span>
+        <span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">'userFriends'</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">'/users/friends'</span><span class="p">)</span> <span class="c1">// REST pseudo path (without IDs)</span>
+        <span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+
+</pre>
+</div>
+
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/ezmilhouse">ezmilhouse</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-2025332-12");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
