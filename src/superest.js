@@ -87,6 +87,10 @@ module.exports = function(app) {
 
 		var that = this;
 
+		// Field name that has to be unique, might be useful to find docs you don't
+		// know the `_id` of.
+		this._id = null;
+
 		// View name for later reference, will also be the object key this resource
 		// will be stored in `_resource` cache object
 		this._name = name;
@@ -159,6 +163,51 @@ module.exports = function(app) {
 
 		// ---
 
+		function parseId(id, key) {
+
+			// objectId
+			if (id.length === 24) return {
+				_id : id
+			};
+
+			// ex: users/12345
+			// ex: users/klaus,18,Berlin
+			// key might come in as normal key representing
+			// a field name of document, it might also be
+			// a comma separated list of field names (if so,
+			// query must contain all fields in cortrect
+			// order).
+
+			// no objectId
+			// no key
+			// no query possible
+			// no result
+			if (!key) return null;
+
+			var arrId
+				, arrKey;
+
+			arrId = id.split(',');
+			arrKey = key.split(',');
+
+			// id value represents fields' values
+			// therefore length must be the same,
+			// otherwise no result
+			if (arrId.length !== arrKey.length) return null;
+
+			// create query from incoming values
+			// and field names.
+			var query = {};
+			_.each(arrKey, function(value, i) {
+				query[value] = arrId[i];
+			});
+
+			return query;
+
+		}
+
+		// ---
+
 		/**
 		 *
 		 * GET     /resource           ->  index
@@ -171,15 +220,14 @@ module.exports = function(app) {
 		 *
 		 **/
 
-			// ---
+		// ---
 
+		/*
 		this._load = function(id, callback) {
 
-			that._model.findOne({
+			var query = parseId(id, this._id);
 
-				_id : id
-
-			}, function(err, doc) {
+			that._model.findOne(query, function(err, doc) {
 
 				if (err) return callback(err);
 
@@ -188,6 +236,7 @@ module.exports = function(app) {
 			});
 
 		};
+		*/
 
 		// ~/resource
 		// GET
@@ -208,13 +257,19 @@ module.exports = function(app) {
 		// GET
 		this._show = function(req, res) {
 
-			var id = req.params[that._db.schema];
+			var id
+				, query;
 
-			that._model.findOne({
+			// ---
 
-				_id : id
+			id = req.params[that._db.schema];
 
-			}, function(err, doc) {
+			// parse `id` to provide queries
+			query = parseId(id, that._id);
+
+			// ---
+
+			that._model.findOne(query, function(err, doc) {
 
 				if (err) return onError('show', res, 400, err);
 				onSuccess('show', res, 200, doc);
@@ -229,18 +284,50 @@ module.exports = function(app) {
 
 			var data = req.body;
 
-			new that._model(data).save(function(err, doc) {
+			// if `_id` is set check for doc with `_id` first
+			// to avoid duplicates.
+			// TODO: remove redundancy
+			if (that._id && data[that._id]) {
 
-				if (req[that._embed]) {
-					req[that._embed][that._db.schema + 's']
-						.push(doc._id);
-					req[that._embed].save();
-				}
+				var query = {};
+				query[that._id] = data[that._id];
 
-				if (err) return onError('create', res, 400, err);
-				onSuccess('create', res, 201, doc);
+				that._model.findOne(query, function(err, doc) {
 
-			});
+					if (err) return onError('unique', res, 400, err);
+					if (doc) return onSuccess('unique', res, 200, doc);
+
+					new that._model(data).save(function(err, doc) {
+
+						if (req[that._embed]) {
+							req[that._embed][that._db.schema + 's']
+								.push(doc._id);
+							req[that._embed].save();
+						}
+
+						if (err) return onError('create', res, 400, err);
+						onSuccess('create', res, 201, doc);
+
+					});
+
+				});
+
+			} else {
+
+				new that._model(data).save(function(err, doc) {
+
+					if (req[that._embed]) {
+						req[that._embed][that._db.schema + 's']
+							.push(doc._id);
+						req[that._embed].save();
+					}
+
+					if (err) return onError('create', res, 400, err);
+					onSuccess('create', res, 201, doc);
+
+				});
+
+			}
 
 		};
 
@@ -403,6 +490,12 @@ module.exports = function(app) {
 			? null
 			: value;
 
+		return this;
+
+	};
+	Resource.prototype.id = function(unique) {
+
+		this._id = unique || null;
 		return this;
 
 	};
